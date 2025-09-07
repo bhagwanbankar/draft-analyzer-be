@@ -16,3 +16,6 @@ class DocumentHistorySchema(BaseModel):
 
 class DocumentHistorySchemaOut(BaseModel):
     history: List[DocumentHistorySchema]
+
+class DocumentHistoryDeleteOut(BaseModel):
+    message: str

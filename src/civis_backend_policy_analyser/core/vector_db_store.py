@@ -60,5 +60,4 @@ class VectorDB:
         """
         Deletes all vectors corresponding to a document ID prefix.
         """
-        all_ids = [id for id in self._store.get_ids() if id.startswith(self.document_id)]
-        self.store.delete(ids=all_ids)
+        self._store.delete(filter={"document_id": self.document_id})
