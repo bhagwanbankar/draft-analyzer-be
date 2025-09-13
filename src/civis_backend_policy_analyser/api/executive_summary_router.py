@@ -3,6 +3,7 @@ from civis_backend_policy_analyser.config.logging_config import logger
 
 from civis_backend_policy_analyser.core.db_connection import DBSessionDep
 from civis_backend_policy_analyser.schemas.executive_summary_schema import ExecutiveSummarySchema
+from civis_backend_policy_analyser.views.document_metadata_view import DocumentMetadataView
 from civis_backend_policy_analyser.views.executive_summary_view import (
     ExecutiveSummaryView,
 )
@@ -27,6 +28,10 @@ async def executive_summary_document(
     try:
         document_summary_service = ExecutiveSummaryView(db_session)
         document_summary: ExecutiveSummarySchema = await document_summary_service.summarize_assessment_summaries(doc_summary_id)
+        
+        # Clean up vector store for the document if executive summary is generated
+        document_service = DocumentMetadataView(db_session)
+        await document_service.clean_vector_db_store(doc_summary_id)
         return document_summary
     except Exception as e:
         logger.error(f"Error fetching executive summary: {e}")
