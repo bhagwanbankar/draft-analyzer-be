@@ -3,13 +3,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import aliased
 from civis_backend_policy_analyser.config.logging_config import logger
 
+from civis_backend_policy_analyser.models.assessment_area_summary import AssessmentAreaSummary
 from civis_backend_policy_analyser.models.document_metadata import DocumentMetadata
 from civis_backend_policy_analyser.models.document_summary import DocumentSummary
 from civis_backend_policy_analyser.models.document_type import DocumentType
+from civis_backend_policy_analyser.models.prompt_score import PromptScore
 from civis_backend_policy_analyser.schemas.history_schema import DocumentHistorySchema, DocumentHistorySchemaOut
 from civis_backend_policy_analyser.utils.constants import REPORTS_OUTPUT_DIR
 from civis_backend_policy_analyser.views.base_view import BaseView
-from seed_data import AssessmentAreaSummary, PromptScore
 
 
 
