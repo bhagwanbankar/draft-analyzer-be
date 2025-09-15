@@ -36,5 +36,5 @@ COPY templates templates
 ENV PYTHONPATH=/app/src
 
 # Default run command
-CMD ["uv", "run", "uvicorn", "civis_backend_policy_analyser.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "uvicorn", "civis_backend_policy_analyser.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
 
