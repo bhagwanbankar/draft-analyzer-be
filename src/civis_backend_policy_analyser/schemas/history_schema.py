@@ -17,5 +17,12 @@ class DocumentHistorySchema(BaseModel):
 class DocumentHistorySchemaOut(BaseModel):
     history: List[DocumentHistorySchema]
 
+
+class PaginatedHistoryOut(BaseModel):
+    history: List[DocumentHistorySchema]
+    total: int
+    page: int
+    page_size: int
+
 class DocumentHistoryDeleteOut(BaseModel):
     message: str

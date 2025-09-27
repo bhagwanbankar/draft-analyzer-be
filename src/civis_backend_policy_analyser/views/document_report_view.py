@@ -71,8 +71,7 @@ class DocumentReportView(BaseView):
 
 
             logger.info(f"Fetched score rows for assessment area {assessment_area.assessment_name} - {score_rows}")
-            print(f"score_rows: {score_rows}")
-            print(f"type of score_rows: {type(score_rows)}")
+            logger.info(f"type of score_rows: {type(score_rows)}")
             # Append to assessments list
             assessments.append({
                 "area_number": index,
@@ -91,7 +90,7 @@ class DocumentReportView(BaseView):
                 "summary": summary.summary_text
             })
 
-        logger.info(f"Generated assessments for document {doc_id}: {assessments}")
+        logger.info(f"Generated assessments for document {doc_id}")
 
         cover_data = {
                 "report_title": "Draft Policy Analyser Report",

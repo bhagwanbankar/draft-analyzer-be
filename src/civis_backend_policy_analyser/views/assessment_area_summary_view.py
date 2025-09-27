@@ -121,6 +121,6 @@ class AssessmentAreaSummaryView(BaseView):
             return None
         
         format_result = await self.format_result(summary, prompt_scores_schema)
-        logger.info(f"Fetched existing assessment area summary: {format_result}")
+        logger.info(f"Fetched existing assessment area summary")
 
         return AssessmentAreaSummaryOut.model_validate(format_result)
