@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 from civis_backend_policy_analyser.config.logging_config import logger
 
@@ -8,7 +8,7 @@ from civis_backend_policy_analyser.models.document_metadata import DocumentMetad
 from civis_backend_policy_analyser.models.document_summary import DocumentSummary
 from civis_backend_policy_analyser.models.document_type import DocumentType
 from civis_backend_policy_analyser.models.prompt_score import PromptScore
-from civis_backend_policy_analyser.schemas.history_schema import DocumentHistorySchema, DocumentHistorySchemaOut
+from civis_backend_policy_analyser.schemas.history_schema import DocumentHistorySchema, DocumentHistorySchemaOut, PaginatedHistoryOut
 from civis_backend_policy_analyser.utils.constants import REPORTS_OUTPUT_DIR
 from civis_backend_policy_analyser.views.base_view import BaseView
 
@@ -17,14 +17,14 @@ from civis_backend_policy_analyser.views.base_view import BaseView
 class HistoryView(BaseView):
     schema = DocumentHistorySchema
 
-    async def get_user_history(self, user_id: str) -> DocumentHistorySchemaOut:
-        logger.info(f"Fetching history for user: {user_id}")
+    async def get_user_history(self, user_id: str, page: int, page_size: int) -> PaginatedHistoryOut:
+        logger.info(f"Fetching history for user: {user_id}, page={page}, page_size={page_size}")
 
         ds = aliased(DocumentSummary)
         dt = aliased(DocumentType)
         dm = aliased(DocumentMetadata)
 
-        query = (
+        base_query = (
             select(
                 ds.doc_summary_id,
                 ds.doc_type_id,
@@ -36,29 +36,44 @@ class HistoryView(BaseView):
             .join(dt, ds.doc_type_id == dt.doc_type_id)
             .join(dm, ds.doc_id == dm.doc_id)
             .where(ds.created_by == user_id)
-            .order_by(ds.created_on.desc())
         )
 
-        result = await self.db_session.execute(query)
+        # total count query
+        total_result = await self.db_session.execute(
+            select(func.count()).select_from(base_query.subquery())
+        )
+        total = total_result.scalar()
+
+        # pagination
+        offset = (page - 1) * page_size
+        paginated_query = base_query.order_by(ds.created_on.desc()).offset(offset).limit(page_size)
+
+        result = await self.db_session.execute(paginated_query)
         rows = result.mappings().all()
 
         # build history objects
-        history = []
-        for row in rows:
-            history.append(
-                DocumentHistorySchema(
-                    doc_type_id=row["doc_type_id"],
-                    doc_summary_id=row["doc_summary_id"],
-                    file_name=row["file_name"],
-                    summary_time=row["summary_time"],
-                    status=row["evaluation_status"],
-                    doc_type=row["doc_type_name"]
-                )
+        history = [
+            DocumentHistorySchema(
+                doc_type_id=row["doc_type_id"],
+                doc_summary_id=row["doc_summary_id"],
+                file_name=row["file_name"],
+                summary_time=row["summary_time"],
+                status=row["evaluation_status"],
+                doc_type=row["doc_type_name"]
             )
-        history_out = DocumentHistorySchemaOut(history=history)
-        logger.info(f"User history fetched successfully: {history}")
+            for row in rows
+        ]
 
+        history_out = PaginatedHistoryOut(
+            history=history,
+            total=total,
+            page=page,
+            page_size=page_size
+        )
+
+        logger.info(f"User history fetched successfully (count={len(history)}/{total})")
         return history_out
+
 
     async def delete_document_history(self, doc_summary_id: int) -> None:
         logger.info(f"Deleting history for document summary ID: {doc_summary_id}")
